@@ -142,23 +142,25 @@ app.get('/recipies/author/:authorName' , async (req , res) => {
 
 //q5 Create an API to get all the recipes that are of "Easy" difficulty level.
 
-const readAllRecipiesByDifficultLevel = async (difficulty) => {
+const readAllRecipiesByDifficultLevel = async (difficultyLevel) => {
     try{
-        const recipieDetail = await Recipie.find({difficulty})
+        const recipieDetail = await Recipie.find({difficulty : difficultyLevel.trim()})
          return recipieDetail
+         //console.log(recipieDetail)
 
     }
      catch(error){
         throw error
      }
 }
+//readAllRecipiesByDifficultLevel('Easy')
 
-app.get('/recipies/level/difficult' , async (req , res) => {
+app.get('/recipies/level/:difficultLevel' , async (req , res) => {
     try{
-        const recipieDetail = await readAllRecipiesByDifficultLevel(req.params.difficult)
+        const recipie = await readAllRecipiesByDifficultLevel(req.params.difficultLevel)
 
-        if(recipieDetail.length !== 0){
-            res.status(200).json(recipieDetail)
+        if(recipie.length !== 0){
+            res.status(200).json(recipie)
         }
          else{
             res.status(404).json({error : 'Recipie Data not found'})
@@ -171,8 +173,69 @@ app.get('/recipies/level/difficult' , async (req , res) => {
      }
 
 })
-const PORT = 5001
 
-app.listen(PORT , () => {
-    console.log(`Server is running on the port ${PORT}`)
+// q6  Create an API to update a recipe's difficulty level with the help of its id. //
+// Update the difficulty of "Spaghetti Carbonara" from "Intermediate" to "Easy". Send an error message "Recipe not found" //
+// if the recipe is not found. Make sure to handle errors properly.
+
+const readByIdAndUpdate = async (recipieId , dataUpdate) => {
+    try{
+        const recipie = await Recipie.findByIdAndUpdate(recipieId , dataUpdate , {new : true})
+        return recipie
+
+    }
+     catch(error){
+        throw error
+     }
+}
+
+app.post('/recipies/Id/:recipieId' , async (req , res) => {
+     
+    try{
+        const recipieDetail = await readByIdAndUpdate(req.params.recipieId , req.body);
+        if(recipieDetail){
+            res.status(200).json({message : 'Data Added Sucessfully' , recipieData : recipieDetail})
+        }
+        else{
+            res.status(404).json({error : 'Recipie Not Found'})
+        }
+    }
+     catch(error){
+        res.status(500).json({error : 'An error Occured during APi fetch'})
+
+     }
 })
+
+//q7 Create an API to update a recipe's prep time and cook time with the help of its title. 
+// //Update the details of the recipe "Chicken Tikka Masala". Send an error message 
+// //"Recipe not found" if the recipe is not found. Make sure to handle errors properly.
+
+//Updated recipe data: { "prepTime": 40, "cookTime": 45 }
+
+const readByTitleAndUpdate = async (foodTitle , dataUpdate) => {
+    try{
+        const recipie = await Recipie.findOneAndUpdate({title : foodTitle} , dataUpdate , {new : true})
+        return recipie
+    }
+     catch(error){
+        throw error
+     }
+}
+
+app.post('/recipies/title/:foodTitle' , async (req , res) => {
+    try{
+        const recipieDetail = await readByTitleAndUpdate(req.params.foodTitle , req.body);
+        if(recipieDetail){
+            res.status(200).json({Message : 'Data Added Sucessfully' , recipieUpdate : recipieDetail})
+        }
+         else{
+            res.status(404).json({Message : 'Recipie Data Not Found'})
+         }
+
+    }
+     catch(error){
+        throw error
+     }
+})
+
+module.exports = app
